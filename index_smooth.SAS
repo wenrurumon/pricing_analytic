@@ -1,4 +1,4 @@
-%let dic = C:\Users\yaoch05\Desktop\Optimal Price Smooth\Optimal Price Smooth;
+%let dic = dic;
 %let file = Input.csv;
 %macro sales_rate;
 data raw;
@@ -65,6 +65,6 @@ data raw(drop = count);
  by count;
  if a;
 run;
-proc export data = work outfile = "C:\Users\yaoch05\Desktop\Optimal Price Smooth\Optimal Price Smooth\output.csv" dbms = csv replace; run;
+proc export data = work outfile = "&dic.\output.csv" dbms = csv replace; run;
 %mend sales_rate;
 %sales_rate;
