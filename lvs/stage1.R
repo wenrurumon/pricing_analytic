@@ -36,8 +36,9 @@ model1 <- function(x){
   data.frame(bsales=x$vol-tpr,psales=tpr)
 }
 
+model2 <- function(x){}
 
-model2 <- function(x){
+model3 <- function(x){
   # x <- data9[[1]]
   xm <- mean(x$vol)
   x <- data.frame(vol=mlog(x$vol),
@@ -112,6 +113,16 @@ data <- data.table(data,
 data9 <- lapply(unique(data$pc9),function(x){
   filter(data,pc9==x)
 })
+
+mfile_s1 <- do.call(rbind,
+                    lapply(data9,function(x){
+                      x <- mutate(x,
+                                  vol=vol/mean(vol),bprice=bprice/mean(bprice),ss=ss/mean(ss),
+                                  tpr=tpr/mean(tpr))
+                    })
+                    )
+mout_s1 <- lm(log(vol)~log(bprice)+log(tpr)+ss+lift,data=mfile_s1)
+summary(mout_s1)
 
 ##########################
 #Modeling
