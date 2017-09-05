@@ -119,6 +119,6 @@ data9 <- lapply(unique(data$pc9),function(x){
 
 #PE calculation in PC5_tag level
 pe_pc9 <- t(sapply(data9,function(x){coef(model2(x))}))
-  pe_pc9[,1] <- controlpe(pe_pc9[,1])
-  pe_pc9[,2] <- controlpe(pe_pc9[,2])
+  pe_pc9[,1] <- controlpe(pe_pc9[,1],0,-5)
+  pe_pc9[,2] <- controlpe(pe_pc9[,2],0,-10)
   pe_pc9[,4] <- controlpe(pe_pc9[,4],0,-Inf)
