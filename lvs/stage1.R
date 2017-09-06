@@ -114,22 +114,52 @@ data9 <- lapply(unique(data$pc9),function(x){
   filter(data,pc9==x)
 })
 
-mfile_s1 <- do.call(rbind,
+##########################
+#Modeling at Segment Level
+##########################
+
+mfile_segment <- do.call(rbind,
                     lapply(data9,function(x){
                       x <- mutate(x,
                                   vol=vol/mean(vol),bprice=bprice/mean(bprice),ss=ss/mean(ss),
                                   tpr=tpr/mean(tpr))
                     })
                     )
-mout_s1 <- lm(log(vol)~log(bprice)+log(tpr)+ss+lift,data=mfile_s1)
-summary(mout_s1)
+mout_segment <- lapply(unique(mfile_segment$segment),function(x){
+  x <- filter(mfile_segment,segment==x)
+  mout_s1 <- lm(mlog(vol)~mlog(bprice)+mlog(tpr)+ss+lift,data=x)
+  mout_s1
+})
+matrix(sapply(mout_segment,coef),5,5,
+       dimnames=list(rownames(sapply(mout_segment,coef)),
+                     unique(mfile_segment$segment)))
 
 ##########################
-#Modeling
+#Modeling at PC5_tag level_stage1
 ##########################
 
-#PE calculation in PC5_tag level
-pe_pc9 <- t(sapply(data9,function(x){coef(model2(x))}))
-  pe_pc9[,1] <- controlpe(pe_pc9[,1],0,-5)
-  pe_pc9[,2] <- controlpe(pe_pc9[,2],0,-10)
-  pe_pc9[,4] <- controlpe(pe_pc9[,4],0,-Inf)
+mfile_pc9 <- data.table(mfile_segment,
+                        res=unlist(lapply(mout_segment,function(x){as.numeric(x$residual)}))
+                        )
+mfile_pc9 <- lapply(unique(mfile_pc9$pc9),function(x){
+  filter(mfile_pc9,pc9==x)
+})
+mout_pc9 <- lapply(mfile_pc9,function(x){
+  lm(mlog(vol)~mlog(bprice)+mlog(tpr)+ss+lift,data=x)
+})
+
+mcoef_pc9 <- t(sapply(mout_pc9,coef))
+mcoef_pc9 <- data.table(
+  t(sapply(mfile_pc9,function(x){c(x[1][[3]],x[1][[4]])})),mcoef_pc9
+)
+colnames(mcoef_pc9) <- c('sku','segment','constant','rpe','ppe','season','canib')
+mcoef_pc9$rpe <- controlpe(mcoef_pc9$rpe)
+mcoef_pc9$ppe <- controlpe(mcoef_pc9$ppe)
+mcoef_pc9$cannib <- controlpe(mcoef_pc9$canib,0,-Inf)
+
+as.data.frame(
+  mcoef_pc9 %>% 
+    group_by(segment) %>% 
+    summarise(mean(rpe),mean(ppe),mean(canib),
+              median(rpe),median(ppe),median(canib))
+)
