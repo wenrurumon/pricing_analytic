@@ -69,8 +69,14 @@ data$pc9 <- tolower(data$pc9)
 data$pc9 <- paste(data$pc9,data$tag_price,sep=',')
 data <- data %>% group_by(week,weeklen,pc5,pc9,tag_price,segment) %>%
   summarise(vol=sum(vol),val=sum(val)) %>% mutate(price=val/vol)
-#filter the items with over 100 week sales only(for demo)
-sel <- names(which(table(data$pc9)>100))
+
+#filter the items
+datareview <- data %>% group_by(pc9, segment) %>% summarise(
+  vol=sum(vol),val=sum(val),n=n()
+)
+# (filter(datareview,n>20) %>% group_by(segment) %>% summarise(val=sum(val)))$val/
+# (datareview %>% group_by(segment) %>% summarise(val=sum(val)))$val
+sel <- filter(datareview,n>20)$pc9
 data <- filter(data,pc9%in%sel)
 
 #calculate base price for each pc5_tag_tagprice
